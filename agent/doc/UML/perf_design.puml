@@ -1,0 +1,72 @@
+@startuml
+'https://plantuml.com/class-diagram'
+
+package "sdk" {
+
+    class PerformanceTestSpec {
+        -String inspector
+        -String appId
+        -String deviceId
+        -String name
+    }
+    interface PerformanceInspector {
+        void initialize(PerformanceTestSpec performanceTestSpec)
+        PerformanceInspectionResult inspect(PerformanceTestSpec performanceTestSpec)
+        PerformanceTestResult parse(List<PerformanceInspectionResult>)
+    }
+
+    interface IPerformanceInspectionService {
+        void reset(PerformanceInspection);
+        PerformanceInspectionResult inspect(PerformanceInspection);
+        void inspectWithStrategy(PerformanceInspection, InspectionStrategy);
+        List<PerformanceTestResult> parse();
+    }
+
+    class PerformanceInspectionService {
+    }
+
+    class PerformanceTestResult {
+        String category
+        Object performanceData
+        List<PerformanceInspectionResult> performanceInspectionResultList
+    }
+
+    class PerformanceInspectionResult {
+        String type;
+        File profilingRawResultFile;
+    }
+
+    PerformanceInspector -left..> PerformanceTestSpec
+    PerformanceInspector -up..> PerformanceInspectionResult
+    PerformanceInspector <---right PerformanceInspectionService
+    PerformanceInspector -up..> PerformanceTestResult
+    PerformanceTestResult -right..> PerformanceInspectionResult
+    PerformanceInspectionService -u-|> IPerformanceInspectionService
+}
+
+package "agent" {
+    abstract class TestRunner {
+    }
+}
+
+package "common" {
+    class PerformanceTestManagementService {
+
+    }
+
+    PerformanceInspector <|-- AndroidBatteryInspector
+    PerformanceInspector <|-- AndroidMemoryInfoInspector
+    PerformanceInspector <|-- AndroidMemoryDumpInspector
+    PerformanceInspector <|-- WindowsBatteryInspector
+    PerformanceInspector <|-- WindowsMemoryInspector
+
+    AndroidBatteryInspector --o PerformanceTestManagementService
+    AndroidMemoryInfoInspector --o PerformanceTestManagementService
+    AndroidMemoryDumpInspector --o PerformanceTestManagementService
+    WindowsBatteryInspector --o PerformanceTestManagementService
+    WindowsMemoryInspector --o PerformanceTestManagementService
+    PerformanceTestManagementService --|> IPerformanceInspectionService
+
+    TestRunner o-u- PerformanceTestManagementService
+}
+@enduml

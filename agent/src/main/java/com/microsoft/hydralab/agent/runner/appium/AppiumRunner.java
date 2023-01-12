@@ -5,7 +5,7 @@ package com.microsoft.hydralab.agent.runner.appium;
 import com.microsoft.hydralab.agent.runner.TestRunner;
 import com.microsoft.hydralab.agent.runner.TestTaskRunCallback;
 import com.microsoft.hydralab.appium.AppiumParam;
-import com.microsoft.hydralab.appium.ThreadParam;
+import com.microsoft.hydralab.TestRunThreadContext;
 import com.microsoft.hydralab.common.entity.common.DeviceInfo;
 import com.microsoft.hydralab.common.entity.common.TestRun;
 import com.microsoft.hydralab.common.entity.common.TestTask;
@@ -47,7 +47,7 @@ public class AppiumRunner extends TestRunner {
             }
         } finally {
             //clear config
-            ThreadParam.clean();
+            TestRunThreadContext.clean();
         }
     }
 
@@ -62,15 +62,6 @@ public class AppiumRunner extends TestRunner {
     }
 
     protected File runAndGetGif(File appiumJarFile, String appiumCommand, DeviceInfo deviceInfo, TestTask testTask, TestRun testRun, File deviceTestResultFolder, Logger reportLogger) {
-        //set appium test property
-        reportLogger.info("Start set appium test property");
-        Map<String, String> instrumentationArgs = testTask.getInstrumentationArgs();
-        if (instrumentationArgs == null) {
-            instrumentationArgs = new HashMap<>();
-        }
-        AppiumParam appiumParam = new AppiumParam(deviceInfo.getSerialNum(), deviceInfo.getName(), deviceInfo.getOsVersion(), IOSUtils.getWdaPortByUdid(deviceInfo.getSerialNum(), reportLogger), testTask.getAppFile().getAbsolutePath(), deviceTestResultFolder.getAbsolutePath());
-        ThreadParam.init(appiumParam, instrumentationArgs);
-        reportLogger.info("ThreadParam init success, AppiumParam is {} , args is {}", appiumParam, LogUtils.scrubSensitiveArgs(instrumentationArgs.toString()));
         File gifFile = null;
         if (TestTask.TestFrameworkType.JUNIT5.equals(testTask.getFrameworkType())) {
             reportLogger.info("Start init listener");
@@ -150,4 +141,10 @@ public class AppiumRunner extends TestRunner {
         }
     }
 
+    @Override
+    protected AppiumParam createAppiumParam(TestRun testRun, TestTask testTask, DeviceInfo deviceInfo) {
+        return new AppiumParam(deviceInfo.getSerialNum(), deviceInfo.getName(), deviceInfo.getOsVersion(),
+                IOSUtils.getWdaPortByUdid(deviceInfo.getSerialNum(), testRun.getLogger()),
+                testTask.getAppFile().getAbsolutePath(), testRun.getResultFolder().getAbsolutePath());
+    }
 }

@@ -1,28 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-package com.microsoft.hydralab.appium;
+package com.microsoft.hydralab;
+
+import com.microsoft.hydralab.appium.AppiumParam;
 
 import java.util.Map;
 
-public class ThreadParam {
-    private static InheritableThreadLocal<AppiumParam> appiumParam = new InheritableThreadLocal<>();
-    private static InheritableThreadLocal<Map<String, String>> configMap = new InheritableThreadLocal<>();
+public class TestRunThreadContext {
+    private static final InheritableThreadLocal<AppiumParam> appiumParam = new InheritableThreadLocal<>();
+    private static final InheritableThreadLocal<ITestRun> testRunThreadLocal = new InheritableThreadLocal<>();
+    private static final InheritableThreadLocal<Map<String, String>> configMap = new InheritableThreadLocal<>();
 
-    public static void init(AppiumParam appiumParamTemp, Map<String, String> configMapParam) {
+    public static void init(ITestRun testRun, AppiumParam appiumParamTemp, Map<String, String> configMapParam) {
         clean();
+        testRunThreadLocal.set(testRun);
         appiumParam.set(appiumParamTemp);
         configMap.set(configMapParam);
     }
 
     public static void clean() {
+        testRunThreadLocal.remove();
         appiumParam.remove();
         configMap.remove();
     }
 
     public static AppiumParam getAppiumParam() {
-        if (appiumParam == null) {
-            return new AppiumParam();
-        }
         AppiumParam temp = appiumParam.get();
         if (temp == null) {
             return new AppiumParam();
@@ -32,9 +34,6 @@ public class ThreadParam {
 
 
     public static String getConfigString(String key) {
-        if (configMap == null) {
-            return null;
-        }
         Map<String, String> temp = configMap.get();
         if (temp == null) {
             return null;
@@ -49,5 +48,9 @@ public class ThreadParam {
             return defaultValue;
         }
         return temp;
+    }
+
+    public static ITestRun getTestRun() {
+        return testRunThreadLocal.get();
     }
 }

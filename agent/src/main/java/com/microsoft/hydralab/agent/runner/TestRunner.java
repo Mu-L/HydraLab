@@ -3,6 +3,8 @@
 package com.microsoft.hydralab.agent.runner;
 
 import cn.hutool.core.lang.Assert;
+import com.microsoft.hydralab.TestRunThreadContext;
+import com.microsoft.hydralab.appium.AppiumParam;
 import com.microsoft.hydralab.common.entity.common.DeviceAction;
 import com.microsoft.hydralab.common.entity.common.DeviceInfo;
 import com.microsoft.hydralab.common.entity.common.TestRun;
@@ -13,12 +15,15 @@ import com.microsoft.hydralab.common.util.DateUtil;
 import com.microsoft.hydralab.common.util.LogUtils;
 import com.microsoft.hydralab.common.util.ThreadPoolUtil;
 import com.microsoft.hydralab.common.util.ThreadUtils;
+import com.microsoft.hydralab.performance.PerformanceInspectionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +46,7 @@ public abstract class TestRunner {
         logger.info("Start running tests {}, timeout {}s", testTask.getTestSuite(), testTask.getTimeOutSecond());
 
         TestRun testRun = createTestRun(deviceInfo, testTask, logger);
+        initTestRunThreadContext(testRun, testTask, deviceInfo, logger);
         checkTestTaskCancel(testTask);
 
         setUp(deviceInfo, testTask, testRun);
@@ -131,6 +137,27 @@ public abstract class TestRunner {
 
         checkTestTaskCancel(testTask);
         deviceManager.getScreenShot(deviceInfo, testRun.getLogger());
+    }
+
+    private void initTestRunThreadContext(TestRun testRun, TestTask testTask, DeviceInfo deviceInfo, Logger logger) {
+        logger.info("Start initializing TestRunThreadContext...");
+        AppiumParam appiumParam = createAppiumParam(testRun, testTask, deviceInfo);
+        Map<String, String> configMapParam = createConfigMapParam(testTask);
+        TestRunThreadContext.init(testRun, appiumParam, configMapParam);
+        logger.info("TestRunThreadContext init success, AppiumParam is {} , args is {}", appiumParam, LogUtils.scrubSensitiveArgs(configMapParam.toString()));
+    }
+
+
+    protected AppiumParam createAppiumParam(TestRun testRun, TestTask testTask, DeviceInfo deviceInfo) {
+        return null;
+    }
+
+    protected Map<String, String> createConfigMapParam(TestTask testTask) {
+        Map<String, String> instrumentationArgs = testTask.getInstrumentationArgs();
+        if (instrumentationArgs == null) {
+            instrumentationArgs = new HashMap<>();
+        }
+        return instrumentationArgs;
     }
 
     protected abstract void run(DeviceInfo deviceInfo, TestTask testTask, TestRun testRun) throws Exception;

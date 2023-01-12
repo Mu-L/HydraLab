@@ -6,6 +6,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.microsoft.hydralab.common.entity.center.TestTaskSpec;
 import com.microsoft.hydralab.common.util.DateUtil;
+import com.microsoft.hydralab.performance.PerformanceInspection;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -100,6 +101,8 @@ public class TestTask implements Serializable {
     private String testScope;
     // todo: change this to a more general name for all scopes of ESPRESSO tests.
     private String testSuite;
+    @Transient
+    private List<PerformanceInspection> performanceInspectionList = new ArrayList<>();
 
     public TestTask() {
     }

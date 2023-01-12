@@ -216,6 +216,8 @@ public class T2CAppiumUtils {
                 String clipboardText = (String) arguments.get("text");
                 driver.setClipboard(clipboardText);
                 break;
+            case "addMemoryAnchor":
+
             default:
                 throw new IllegalStateException("action fail" +
                         "" +
